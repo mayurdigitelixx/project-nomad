@@ -491,7 +491,13 @@ export default class OllamaController {
       const ollamaContainer = containers.find((c) =>
         c.Names.includes(`/${SERVICE_NAMES.OLLAMA}`)
       )
-      if (!ollamaContainer || ollamaContainer.State !== 'running') {
+      if (!ollamaContainer) {
+        return
+      }
+      // Park it with no restart policy. A stopped `unless-stopped` container stays down on
+      // Docker, but runtimes like Podman start it again on boot and it takes port 11434.
+      await this._setLocalOllamaRestartPolicy(ollamaContainer.Id, 'no')
+      if (ollamaContainer.State !== 'running') {
         return
       }
       await this.dockerService.docker.getContainer(ollamaContainer.Id).stop()
@@ -505,6 +511,23 @@ export default class OllamaController {
     }
   }
 
+  private async _setLocalOllamaRestartPolicy(
+    containerId: string,
+    policy: 'no' | 'unless-stopped'
+  ): Promise<void> {
+    try {
+      await this.dockerService.docker
+        .getContainer(containerId)
+        .update({ RestartPolicy: { Name: policy } })
+    } catch (error: any) {
+      // Not fatal: the stop/start still happens, only the boot behavior is affected.
+      logger.warn(
+        { err: error },
+        `[OllamaController] Could not set nomad_ollama restart policy to ${policy}`
+      )
+    }
+  }
+
   private async _startLocalOllamaContainerIfExists(): Promise<boolean> {
     try {
       const containers = await this.dockerService.docker.listContainers({ all: true })
@@ -514,6 +537,8 @@ export default class OllamaController {
       if (!ollamaContainer) {
         return false
       }
+      // Restore the seeded policy that _stopLocalOllamaContainer cleared.
+      await this._setLocalOllamaRestartPolicy(ollamaContainer.Id, 'unless-stopped')
       if (ollamaContainer.State !== 'running') {
         await this.dockerService.docker.getContainer(ollamaContainer.Id).start()
         this.dockerService.invalidateServicesStatusCache()
