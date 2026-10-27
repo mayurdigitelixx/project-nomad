@@ -123,6 +123,13 @@ const getSavedMapView = (): SavedMapView | null => {
   return null
 }
 
+// `?marker=<id>` deep link (used by chat answers): fly to that pin and open it.
+const getMarkerParam = (): number | null => {
+  const raw = new URLSearchParams(window.location.search).get('marker')
+  const id = raw ? Number(raw) : NaN
+  return Number.isInteger(id) && id > 0 ? id : null
+}
+
 const isValidMarkerCoordinate = (marker: { longitude: number; latitude: number }) =>
   Number.isFinite(marker.longitude) &&
   Number.isFinite(marker.latitude) &&
@@ -273,9 +280,23 @@ export default function MapComponent({
     localStorage.setItem('nomad:map-scale-unit', unit)
   }, [])
 
+  const [mapLoaded, setMapLoaded] = useState(false)
+  const pendingMarkerIdRef = useRef<number | null>(getMarkerParam())
+
   const handleMapLoad = useCallback(() => {
-    flyToLocationParams()
+    setMapLoaded(true)
+    if (pendingMarkerIdRef.current === null) flyToLocationParams()
   }, [flyToLocationParams])
+
+  useEffect(() => {
+    const id = pendingMarkerIdRef.current
+    if (id === null || !mapLoaded) return
+    const marker = markers.find((m) => m.id === id && isValidMarkerCoordinate(m))
+    if (!marker) return
+    pendingMarkerIdRef.current = null
+    mapRef.current?.flyTo({ center: [marker.longitude, marker.latitude], zoom: 16, duration: 1500 })
+    setSelectedMarkerId(marker.id)
+  }, [markers, mapLoaded])
 
   const handleMapClick = useCallback(
     (e: MapLayerMouseEvent) => {

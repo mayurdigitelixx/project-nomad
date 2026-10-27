@@ -22,6 +22,40 @@ export interface ChatMessage {
   sources?: ChatSource[]
   // Generation stopped at the length limit, so the answer ends mid-thought.
   truncated?: boolean
+  // Tool steps of the chat agent behind this answer (see app/services/agent_service.ts).
+  steps?: AgentStepView[]
+}
+
+export interface AgentStepLink {
+  title: string
+  url: string
+  kind: 'library' | 'map' | 'file'
+}
+
+export interface AgentPlaceView {
+  id: number
+  name: string
+  latitude: number
+  longitude: number
+  color: string
+  notes: string | null
+  category: string
+  distance_km: number | null
+  map_url: string
+}
+
+export interface AgentStepView {
+  id: string
+  round: number
+  tool: string
+  args: Record<string, unknown>
+  status: 'running' | 'done' | 'error'
+  summary?: string
+  links?: AgentStepLink[]
+  places?: AgentPlaceView[]
+  proposal?: { name: string; latitude: number; longitude: number; color: string; notes: string | null }
+  note?: string
+  ms?: number
 }
 
 export interface ChatImageAttachment {
