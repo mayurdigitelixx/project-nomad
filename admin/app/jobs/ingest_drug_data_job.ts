@@ -438,23 +438,17 @@ export class IngestDrugDataJob {
     const yauzl = await import('yauzl')
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore — stream-json resolved at runtime from dependencies
-    const createParser = (await import('stream-json')).default.parser
+    const createParser = (await import('stream-json')).parserStream
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore — stream-json deep subpath resolved at runtime
-    const createPick = (await import('stream-json/filters/Pick.js')).default.pick
+    const createPick = (await import('stream-json/filters/pick.js')).pick.asStream
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore — stream-json deep subpath resolved at runtime
-    const createStreamArray = (await import('stream-json/streamers/StreamArray.js')).default.streamArray
+    const createStreamArray = (await import('stream-json/streamers/stream-array.js')).streamArray.asStream
 
-    // Defensive: stream-json 1.9.1 (CJS) exposes its factories only as
-    // `.default.parser` / `.default.pick` / `.default.streamArray` under ESM
-    // dynamic import — there is NO `parser`/`pick`/`streamArray` named export, so
-    // destructuring those silently yielded `undefined`. Calling an undefined
-    // "factory" then threw inside the yauzl openReadStream callback (not a
-    // promise), the process-level backstop swallowed the uncaughtException, the
-    // streamIngestPart promise never settled, and the 90s watchdog fired in a
-    // retry loop with zero records. THIS was the real ingest hang. Validate the
-    // imports here so any future interop slip fails loud in the async body.
+    // stream-json 3 exposes ESM factories; use the Node stream adapters
+    // because this ingestion pipeline connects them with Readable.pipe().
+    // Validate before opening the ZIP so import failures reject visibly.
     if (
       typeof createParser !== 'function' ||
       typeof createPick !== 'function' ||

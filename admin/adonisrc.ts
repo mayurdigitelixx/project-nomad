@@ -1,3 +1,5 @@
+import { indexEntities } from '@adonisjs/core/generators'
+import { indexPages } from '@adonisjs/inertia'
 import { defineConfig } from '@adonisjs/core/app'
 
 export default defineConfig({
@@ -83,12 +85,12 @@ export default defineConfig({
   tests: {
     suites: [
       {
-        files: ['tests/unit/**/*.spec(.ts|.js)'],
+        files: ['tests/unit/**/*.spec.{ts,js}'],
         name: 'unit',
         timeout: 2000,
       },
       {
-        files: ['tests/functional/**/*.spec(.ts|.js)'],
+        files: ['tests/functional/**/*.spec.{ts,js}'],
         name: 'functional',
         timeout: 30000,
       },
@@ -107,6 +109,10 @@ export default defineConfig({
   */
   metaFiles: [
     {
+      pattern: 'scripts/patch_ts_exec.mjs',
+      reloadServer: false,
+    },
+    {
       pattern: 'resources/views/**/*.edge',
       reloadServer: false,
     },
@@ -120,8 +126,8 @@ export default defineConfig({
     },
   ],
 
-  assetsBundler: false,
   hooks: {
-    onBuildStarting: [() => import('@adonisjs/vite/build_hook')],
+    init: [indexEntities(), indexPages({ framework: 'react' })],
+    buildStarting: [() => import('@adonisjs/vite/build_hook')],
   },
 })

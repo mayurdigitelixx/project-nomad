@@ -30,7 +30,7 @@ import {
   resolveExpectedGpuVendor,
   type OllamaGpuInfo,
 } from '#services/ollama_compute'
-import { invalidateAssistantNameCache } from '../../config/inertia.js'
+import { invalidateAssistantNameCache } from '#services/assistant_name_cache'
 import { invalidateMinRelevanceCache } from '../utils/rag_relevance.js'
 import { invalidateResponseStyleCache } from '../utils/response_style.js'
 import { KiwixLibraryService } from '#services/kiwix_library_service'

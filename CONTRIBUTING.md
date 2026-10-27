@@ -57,7 +57,7 @@ When opening an issue:
 - `sudo`/root privileges
 - Docker installed and running
 - A stable internet connection (required for dependency downloads)
-- Node.js (for frontend/admin work)
+- Node.js 24 or newer (required by AdonisJS 7 for frontend/admin work)
 
 ### Fork & Clone
 
