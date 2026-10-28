@@ -518,7 +518,7 @@ export default class ServiceSeeder extends BaseSeeder {
       display_order: 27,
       description: 'Open-source media server — stream your video, music, and photo libraries',
       icon: 'IconMovie',
-      container_image: 'jellyfin/jellyfin:10.11.11',
+      container_image: 'jellyfin/jellyfin:12.4',
       source_repo: 'https://github.com/jellyfin/jellyfin',
       container_command: null,
       container_config: JSON.stringify({
